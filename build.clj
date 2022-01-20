@@ -1,8 +1,8 @@
 (ns build
   (:require [clojure.tools.build.api :as b]))
 
-(def lib 'io.github.dfornika/illumina-uploader)
-(def main-ns 'illumina-uploader.core)
+(def lib 'io.github.dfornika/coverage-adjust)
+(def main-ns 'coverage-adjust.core)
 (def version (format "0.1.%s" (b/git-count-revs nil)))
 (def class-dir "target/classes")
 (def basis (b/create-basis {:project "deps.edn"}))
