@@ -7,13 +7,7 @@
   (:gen-class))
 
 
-(def cli-options
-  [["-q" "--sequence-qc BASIC_QC"]
-   ["-a" "--abundance ABUNDANCE"]
-   ["-s" "--species SPECIES"]
-   ["-g" "--genome-size GENOME SIZE"]
-   ["-h" "--Help"]])
-
+(def version "v0.1.0")
 
 (defn csv-data->maps
   ([csv-data]
@@ -91,19 +85,54 @@
                            :estimated-coverage-for-target-genome estimated-coverage))))
 
 
+(defn exit [status msg]
+  (println msg)
+  (System/exit status))
+
+
+(defn usage [options-summary]
+  (->> [(str/join " " ["coverage-adjust" version])
+        "Usage: java -jar coverage-adjust.jar OPTIONS"
+        "Options:"
+        options-summary]
+       (str/join \newline)))
+
+
 (defn -main [& args]
   "Re-estimate depth of coverage, based on number of sequenced bases, 
    target species and genome size"
 
+  (def cli-options
+  [["-q" "--sequence-qc BASIC_QC"]
+   ["-a" "--abundance ABUNDANCE"]
+   ["-s" "--species SPECIES"]
+   ["-g" "--genome-size GENOME SIZE"
+    :parse-fn #(Long/parseLong %)]
+   ["-h" "--help"]
+   ["-v" "--version"]])
+
+  ;;
   ;; Command-line argument parsing
   (def opts (parse-opts args cli-options))
 
+  ;;
+  ;; Handle -h and --help flags
+  (if (get-in opts [:options :help])
+    (let [options-summary (:summary opts)]
+      (exit 0 (usage options-summary))))
+
+  ;;
+  ;; Handle -v and --version flags
+  (if (get-in opts [:options :version])
+    (exit 0 version))
+              
   (def target-species
     (get-in opts [:options :species]))
 
   (def genome-size
-    (Long/parseLong (get-in opts [:options :genome-size])))
+    (get-in opts [:options :genome-size]))
 
+  ;;
   ;; Input file parsing
   (def sequence-qc-headers [:library-id               :estimated-genome-size-bp
                             :estimated-depth-coverage :total-bases
@@ -116,6 +145,7 @@
   (def abundances 
     (parse-abundance (get-in opts [:options :abundance])))
 
+  ;;
   ;; Prepare output by adjusting coverage calculations for each sample
   (def output 
     (let [sample-ids (keys sequence-qc)
@@ -123,6 +153,7 @@
           sample-abundances (map #(get abundances %) sample-ids)]
       (map #(adjust-sample-coverage % %2 target-species genome-size) sample-qcs sample-abundances)))
 
+  ;;
   ;; Print output to stdout
   (let [columns (conj sequence-qc-headers :target-species-name      :target-species-genome-size-bp
                                           :target-species-abundance :estimated-coverage-for-target-genome)
@@ -132,6 +163,7 @@
       (csv/write-csv writer (cons headers rows)))))
 
 
+;;
 ;; Useful forms for development & debugging. Not evaluated during main runtime.
 (comment
   (def args [])

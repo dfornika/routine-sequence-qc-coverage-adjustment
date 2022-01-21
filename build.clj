@@ -3,7 +3,7 @@
 
 (def lib 'io.github.dfornika/coverage-adjust)
 (def main-ns 'coverage-adjust.core)
-(def version (format "0.1.%s" (b/git-count-revs nil)))
+(def version (format "0.1.0-SNAPSHOT"))
 (def class-dir "target/classes")
 (def basis (b/create-basis {:project "deps.edn"}))
 (def uber-file (format "target/%s-%s-standalone.jar" (name lib) version))
