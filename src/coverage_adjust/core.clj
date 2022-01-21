@@ -92,7 +92,9 @@
 
 (defn usage [options-summary]
   (->> [(str/join " " ["coverage-adjust" version])
+        ""
         "Usage: java -jar coverage-adjust.jar OPTIONS"
+        ""
         "Options:"
         options-summary]
        (str/join \newline)))
